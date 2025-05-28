@@ -1,4 +1,6 @@
 # Actor-Critic Algorithms
+Author: Bagautdin Nukhkadiev
+
 
 Reproducing code (on Mac):
 
