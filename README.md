@@ -9,7 +9,10 @@ pip install -r requirements.txt
 ```
 
 You can run experiments using `main.py` as entry point. It has config specified in it.
-My implementations of REINFORCE and minibatch-REINFORCE can be found in `algorithms` directory
+My implementations of REINFORCE and minibatch-REINFORCE can be found in `algorithms` directory.
+
+Algorithm rewards are logged in `results` directory.
+
 
 ## a) Evaluation Study Using Gymnasium Classic Environments
 > Conduct an rliable-based evaluation study across all Gymnasium classic control environments, using as many seeds per environment as feasible. Include your implementations of REINFORCE and Mini-batch REINFORCE, as well as the following pre-implemented (partially SOTA) algorithms: ARS, A2C, DDPG, PPO, SAC, TD3, TQC, and TRPO.
