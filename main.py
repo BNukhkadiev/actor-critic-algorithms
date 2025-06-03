@@ -6,9 +6,14 @@ from stable_baselines3 import PPO, A2C
 from sb3_contrib import TRPO, ARS
 
 discrete_envs = ["CartPole-v1", "Acrobot-v1", "MountainCar-v0"]
-continuous_envs = ["Pendulum-v1"]
+# discrete_envs = []
 
-seeds = [0, 1, 2]
+continuous_envs = ["Pendulum-v1"]
+# continuous_envs = []
+
+# seeds = [0, 1, 2]
+seeds = [3, 4, 5, 6, 7, 8, 9, 10]
+
 
 for env_id in discrete_envs + continuous_envs:
     if env_id in discrete_envs:

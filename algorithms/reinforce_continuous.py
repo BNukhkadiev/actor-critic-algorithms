@@ -25,7 +25,6 @@ class GaussianPolicy(nn.Module):
         dist = torch.distributions.Normal(mu, std)
         action = dist.sample()
         return action, dist.log_prob(action).sum(dim=-1)
-
 class ReinforceContinuous:
     def __init__(self, env_id, seed=0, lr=1e-3, gamma=0.99):
         self.env = gym.make(env_id)
@@ -41,7 +40,8 @@ class ReinforceContinuous:
         self.gamma = gamma
 
     def train(self, num_episodes=500):
-        all_rewards = []
+        timestep = 0
+        timestep_rewards = []
 
         for episode in range(num_episodes):
             log_probs = []
@@ -49,19 +49,24 @@ class ReinforceContinuous:
 
             state, _ = self.env.reset()
             done = False
+            ep_len = 0
 
             while not done:
                 state_tensor = torch.tensor(state, dtype=torch.float32)
                 action, log_prob = self.policy.sample_action(state_tensor)
-                clipped_action = torch.clamp(action, float(self.env.action_space.low[0]), float(self.env.action_space.high[0]))
+                clipped_action = torch.clamp(
+                    action,
+                    float(self.env.action_space.low[0]),
+                    float(self.env.action_space.high[0])
+                )
                 next_state, reward, terminated, truncated, _ = self.env.step(clipped_action.detach().numpy())
 
                 log_probs.append(log_prob)
                 rewards.append(reward)
                 state = next_state
                 done = terminated or truncated
+                ep_len += 1
 
-            all_rewards.append(sum(rewards))
             returns = self._compute_returns(rewards)
 
             loss = -torch.stack([
@@ -72,7 +77,11 @@ class ReinforceContinuous:
             loss.backward()
             self.optimizer.step()
 
-        return all_rewards
+            timestep += ep_len
+            ep_return = sum(rewards)
+            timestep_rewards.append([timestep, ep_return])
+
+        return timestep_rewards
 
     def _compute_returns(self, rewards):
         returns = []

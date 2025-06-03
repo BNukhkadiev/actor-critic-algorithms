@@ -18,7 +18,8 @@ class MiniBatchReinforce:
         self.batch_size = batch_size
 
     def train(self, num_episodes=500):
-        all_returns = []
+        timestep = 0
+        timestep_rewards = []
         batch_log_probs, batch_returns = [], []
 
         for episode in range(num_episodes):
@@ -26,6 +27,7 @@ class MiniBatchReinforce:
             log_probs, rewards = [], []
 
             done = False
+            ep_len = 0
             while not done:
                 obs_tensor = torch.tensor(obs, dtype=torch.float32)
                 probs = self.policy(obs_tensor)
@@ -35,6 +37,7 @@ class MiniBatchReinforce:
                 obs, reward, terminated, truncated, _ = self.env.step(action.item())
                 done = terminated or truncated
                 rewards.append(reward)
+                ep_len += 1
 
             returns = [sum(rewards[i:]) for i in range(len(rewards))]
             batch_log_probs.extend(log_probs)
@@ -47,5 +50,8 @@ class MiniBatchReinforce:
                 self.optimizer.step()
                 batch_log_probs, batch_returns = [], []
 
-            all_returns.append(sum(rewards))
-        return all_returns
+            timestep += ep_len
+            ep_return = sum(rewards)
+            timestep_rewards.append([timestep, ep_return])
+
+        return timestep_rewards

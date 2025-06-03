@@ -16,7 +16,8 @@ class PolicyNetwork(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-
+    
+    
 class Reinforce:
     def __init__(self, env_id="CartPole-v1", seed=0, lr=1e-2):
         self.env = gym.make(env_id)
@@ -29,12 +30,15 @@ class Reinforce:
         self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
 
     def train(self, num_episodes=500):
-        all_returns = []
+        timestep = 0
+        timestep_rewards = []
+
         for episode in range(num_episodes):
             obs, _ = self.env.reset()
             log_probs, rewards = [], []
 
             done = False
+            ep_len = 0
             while not done:
                 obs_tensor = torch.tensor(obs, dtype=torch.float32)
                 probs = self.policy(obs_tensor)
@@ -44,7 +48,9 @@ class Reinforce:
                 obs, reward, terminated, truncated, _ = self.env.step(action.item())
                 done = terminated or truncated
                 rewards.append(reward)
+                ep_len += 1
 
+            # Policy update
             returns = [sum(rewards[i:]) for i in range(len(rewards))]
             loss = -torch.stack([lp * G for lp, G in zip(log_probs, returns)]).sum()
 
@@ -52,5 +58,8 @@ class Reinforce:
             loss.backward()
             self.optimizer.step()
 
-            all_returns.append(sum(rewards))
-        return all_returns
+            timestep += ep_len
+            ep_return = sum(rewards)
+            timestep_rewards.append([timestep, ep_return])
+
+        return timestep_rewards

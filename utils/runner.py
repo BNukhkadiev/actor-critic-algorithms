@@ -14,7 +14,6 @@ def run_experiment(env_id, algo_cls, algo_name, seed, total_timesteps=50_000):
     os.makedirs(result_path, exist_ok=True)
     output_file = os.path.join(result_path, f"seed{seed}.json")
 
-    # SB3/SB3-contrib algorithms
     if issubclass(algo_cls, BaseAlgorithm):
         env = gym.make(env_id)
         env = Monitor(env)
@@ -23,13 +22,20 @@ def run_experiment(env_id, algo_cls, algo_name, seed, total_timesteps=50_000):
         agent = algo_cls("MlpPolicy", env, seed=seed, verbose=0)
         agent.learn(total_timesteps=total_timesteps)
 
-        # Get episode rewards from Monitor
+        # Extract reward per episode with associated timesteps
         rewards = env.get_episode_rewards()
+        lengths = env.get_episode_lengths()
+
+        timestep_rewards = []
+        cumulative_timestep = 0
+        for r, l in zip(rewards, lengths):
+            cumulative_timestep += l
+            timestep_rewards.append((cumulative_timestep, r))
 
     else:
-        # Custom algorithm (assumed compatible interface)
+        # Custom algorithm should return list of (timestep, reward) tuples
         agent = algo_cls(env_id, seed)
-        rewards = agent.train()
+        timestep_rewards = agent.train()
 
     with open(output_file, "w") as f:
-        json.dump(rewards, f)
+        json.dump(timestep_rewards, f)
